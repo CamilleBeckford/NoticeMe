@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<!--<meta http-equiv="Content-Type" content="text/html; charset = utf-8" />-->
+	<title>Notice Me</title>
+	<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles/login.css')}}"/>
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+	<script src="script.js" type="text/javascript"> </script>
+</head>
+
+<body>
+
+
+<div id="banner">
+  <button class="tablink"><strong>Notice Me</strong></button>
+  <button class="tablink" onclick="openPage('Home', this, '#135171')" id="defaultOpen">Home</button>
+  <button class="tablink" onclick="openPage('Contact', this, '#3699ff')">Contact</button>
+  <button class="tablink" onclick="openPage('About', this, '#258825')">About</button>
+</div>
+	
+<div id="Home" class="tabcontent">
+  <form action="/dashboard/submit" method="POST">
+  
+    <h2>Enter Your Message Here</h2>
+  
+    <div class="container">
+       
+
+      <textarea name="message" cols="60" rows="10"></textarea><br/><br/>
+      <button class="sub" type="submit" name="login">Submit</button> <br/><br/><br/>
+      
+    </div>
+  
+  </form>
+</div>
+
+<div id="Contact" class="tabcontent">
+  <div>
+
+    
+
+      <table id="example">
+        <thead>
+            <tr>
+                
+                <th>Description</th>
+                <th>Category</th>
+                <th>Due Date</th>
+                <th>Notes</th>
+                <th>Email reminder</th>
+                <th>Priority</th>
+                <th>Sub-Tasks</th>
+                <th>Delete</th>
+                <th>Edit</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for task in tasklist %}
+            <tr>
+              
+              <td id="{{ task.id }}">{{ task.description}} </td>
+              <td id="{{ task.id }}">{{ task.category }}</td>
+              <td id="{{ task.id }}">{{ task.due }}</td>
+              <td id="{{ task.id }}">{{ task.notes }}</td>
+              <td id="{{ task.id }}">{{ task.remind}}</td>
+              <td id="{{ task.id }}">{{ task.priority}}</td>
+
+              <td id="{{ task.id }}"><a class="btn" href="/api/subs/{{ task.id }}">Subtasks</td>
+
+              <td id="{{ task.id }}"><a class="btn btn-danger" href="/api/delete/{{ task.id }}">Delete</td>
+              <td id="{{ task.id }}"><a class="btn btn-danger" href="/api/edit/{{ task.id }}">Edit</td>
+              
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+</body>
+
+</html>
