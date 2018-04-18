@@ -7,9 +7,13 @@ from datetime import datetime
 from flask_table import Table, Col
 from flask_wtf import FlaskForm
 from wtforms import StringField, DateField, BooleanField, PasswordField,SubmitField,SelectField
-from flask_login import current_user
+from flask_login import current_user, LoginManager, UserMixin, login_user, login_required, logout_user
 import os
 import time
+import socket
+import paho.mqtt.client as mqtt
+import sys
+
 app = Flask(__name__)
 
 app.config['SQLALCHEMY_DATABASE_URI'] ='mysql://root:noticeMe123@localhost/noticeme'
@@ -20,6 +24,17 @@ app.config['SECRET_KEY'] = 'super-secret'
 ##app.config['SECURITY_PASSWORD_SALT'] = '0fd571c2653fbbf4126ffcc4fbbffa25'
 
 db= SQLAlchemy(app)
+
+login_manager=LoginManager()
+login_manager.init_app(app)
+login_manager.login_view='login'
+displays=['HallLT','RossLT']
+times=['0.5','1','5','15','30','45','60']
+myip="172.16.188.80"
+broker_address=myip
+resp=''
+client=mqtt.Client("Server")
+
 
 # Define models
 roles_users = db.Table('roles_users',
@@ -61,6 +76,10 @@ class Displays(db.Model):
 user_datastore = SQLAlchemyUserDatastore(db, User, Role)
 security = Security(app, user_datastore)
 
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
+
 # Create a user to test with
 @app.before_first_request
 def create_user():
@@ -73,27 +92,80 @@ def create_user():
 def userlog():
 	return render_template('login.html')
     
+    
+def piesend(message):
+    
+    print("Creating new instance")
+    ##	client.on_message=on_message
+    print("Connecting to broker")
+    client.connect(broker_address)
+    client.loop_start()
+    client.subscribe("RossLT")
+    client.publish("RossLT",message)
+    print("Publish")
+    time.sleep(4)
+    client.loop_stop()
+    
+def megasend(message):
+    sock=socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server_address=('192.168.0.101',80)
+    sock.connect(server_address)
+    try:
+                    #message= 'ESp'+request.form['message']
+                        #mess=str(request.form['message'])
+        mess='esp'+message
+        sock.sendall(mess.encode('utf-8'))
+                    #sock.sendall(bytes(mess,'utf-8'))
+        amount_recieved=0
+                  
+        amount_expected= len(mess)
+    finally:
+        sock.close()
+        
+def on_message(client,userdata,message):
+    resp=message.payload.decode("utf-8")
+    print("message recieved", str(message.payload.decode("utf-8")))
+    
+    
 @app.route("/dashboard",methods=['POST'])
 def dashboard():
 	username = request.form['username']
 	user=User.query.filter_by(email=username).first()
-	if User:
-		return render_template('dash.html')
+	chatinz=Messages.query.filter_by(user_id=user.id)
+	if user:
+                
+		return render_template('dash.html',displays=displays, times=times, chatinz=chatinz)
 	else:
                 return render_template('login.html')
+            
 @app.route("/dashboard/submit",methods=['POST'])
 def submit():
                 message=Messages(message=request.form['message'],user_id=1)
 		db.session.add(message)
 		db.session.commit()
-##		os.system("telnet  192.168.1.106 80")
-##	time.sleep(6)
-		os.system("hey")
-		os.system(request.form['message'])
-		return render_template('login.html')
+		screen=request.form['displays']
+		
+		print(str(request.form['displays']))
+		if(screen==displays[0]):
+                    megasend(request.form['message'])
+                    
+                else:
+                    piesend(request.form['message'])
+                    print("Connecting to broker")
+                    client.connect(broker_address)
+                    client.loop_start()
+                    client.subscribe("RossResp")
+                    client.on_message=on_message
+                    time.sleep(4)
+                    client.loop_stop()
+                if resp=='OK':
+                    print 'Message recieved'
+                    
+                   
+		return render_template('dash.html',displays=displays, times=times)
 
 
 
 if __name__ == '__main__':
-    app.run(host='192.168.1.104', port=5001, debug=True)
-    app.debug(True)
+    app.run(host=myip, port=5000, debug=True)
+    app.debug(True) 

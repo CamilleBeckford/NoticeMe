@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 	<!--<meta http-equiv="Content-Type" content="text/html; charset = utf-8" />-->
 	<title>Notice Me</title>
-	<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles/login.css')}}"/>
+	<link rel="stylesheet" type="text/css" href='/static/login.css'>/>
 	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
 	<script src="script.js" type="text/javascript"> </script>
 </head>
@@ -28,7 +29,20 @@
     <div class="container">
        
 
-      <textarea name="Message" cols="60" rows="10"></textarea><br/><br/>
+      <textarea name="message" cols="60" rows="10"></textarea><br/><br/>
+			<select name="displays" method="GET" action="/">
+			  <option value="{{displays[0]}}" selected>{{displays[0]}}</option>
+			  {% for display in displays[1:] %}
+			    <option value="{{display}}">{{display}}</option>
+			  {% endfor %}
+			</select>
+			
+			<select name="times" method="GET" action="/">
+			  <option value="{{times[0]}}" selected>{{times[0]}}</option>
+			  {% for time in times[1:] %}
+			    <option value="{{time}}">{{time}}</option>
+			  {% endfor %}
+			</select>
       <button class="sub" type="submit" name="login">Submit</button> <br/><br/><br/>
       
     </div>
