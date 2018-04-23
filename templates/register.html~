@@ -24,7 +24,7 @@
   <form action="/dashboard" method="POST">
   
     <div class="imgcontainer">
-      <h2>Login Area</h2>
+      <h2>Registration</h2>
       <img src="https://image-store.slidesharecdn.com/cda0d682-1c66-4c6d-b79d-f5031655d879-large.png" alt="Avatar" class="avatar">
     </div>
   
@@ -37,19 +37,14 @@
        </select> </br> -->
        
       <label><b>Username</b></label>
-      <input type="text" placeholder="Alan Turning" name="username" required>
+      <input type="text" placeholder="Alan Turing" name="username" required>
   
       <label><b>Password</b></label>
       <input type="password" placeholder=" " name="password" required>
-      <button class="sub" type="submit" name="login">Login</button>
-	<br/><br/>
-      <p><input type="checkbox" checked="checked"> Remember me<br/>
-      Forgot <a id="psw" href="#">password</a>?<p/>
-      
-    </div>
+      <button class="sub" type="submit" name="register">Registration</button> <br/><br/><br/>
+         </div>
   
   </form>
-  <a class="btn" href="/reg">Register</a>
 </div>
 
 <div id="Contact" class="tabcontent">

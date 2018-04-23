@@ -37,11 +37,12 @@
        </select> </br> -->
        
       <label><b>Username</b></label>
-      <input type="text" placeholder="Adam Findlator" name="username" required>
+      <input type="text" placeholder="Alan Turning" name="username" required>
   
       <label><b>Password</b></label>
       <input type="password" placeholder=" " name="password" required>
-      <button class="sub" type="submit" name="login">Login</button> <br/><br/><br/>
+      <button class="sub" type="submit" name="login">Login</button>
+	<br/><br/>
       <p><input type="checkbox" checked="checked"> Remember me<br/>
       Forgot <a id="psw" href="#">password</a>?<p/>
       
