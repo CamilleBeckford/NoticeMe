@@ -32,13 +32,14 @@ login_manager=LoginManager()
 login_manager.init_app(app)
 login_manager.login_view='login'
 displays=['HallLT','RossLT']
-times=['0.5','1','5','15','30','45','60']
-myip="192.168.1.104"
+times=['1','5','15','30','45','60']
+myip="192.168.1.104 "
 broker_address=myip
 resp=''
 client=mqtt.Client("Server")
 q1=Queue()
 q2=Queue()
+profane=['fuck','died','bomb']
 
 
 # Define models
@@ -105,7 +106,7 @@ def create_user():
 
 @app.route("/")
 def userlog():
-	return render_template('login.html')
+	return render_template('login.html',errorm='',type='')
     
     
 def piesend(message):
@@ -148,9 +149,11 @@ def on_message(client,userdata,message):
     resp=message.payload.decode("utf-8")
     print("message recieved", str(message.payload.decode("utf-8")))
     
-    
+   
 @app.route("/dashboard",methods=['POST','GET'])
 def dashboard():
+    rossstatus=Displays.query.filter_by(location='RossLT').first().status
+    hallstatus=Displays.query.filter_by(location='HallLT').first().status
     if request.method=='POST':
 	username = request.form['username']
 	user=User.query.filter_by(email=username).first()
@@ -161,62 +164,74 @@ def dashboard():
             if user.Admin== 'Admin':
                 chatinz=Messages.query.all()
                 wannabes=User.query.filter_by(active=0)
-                return render_template('admindash.html',displays=displays, times=times, chatinz=chatinz,wannabes=wannabes)
+                return render_template('admindash.html',displays=displays, times=times, chatinz=chatinz,wannabes=wannabes,rossstatus=rossstatus,hallstatus=hallstatus)
             else:
                 chatinz=Messages.query.filter_by(user_id=user.id)
                                 
-		return render_template('dash.html',displays=displays, times=times, chatinz=chatinz)
+		return render_template('dash.html',displays=displays, times=times, chatinz=chatinz,rossstatus=rossstatus,hallstatus=hallstatus)
 	else:
-                return render_template('login.html')
+                return render_template('login.html',errorm='No User',type='alert alert-danger')
     else:
-        if current_user.Admin== 'Admin':
-                chatinz=Messages.query.all()
-                return render_template('admindash.html',displays=displays, times=times, chatinz=chatinz)
+        if current_user.is_anonymous:
+            return redirect(url_for('userlog'))
         else:
-                idnum=current_user.id
-                chatinz=Messages.query.filter_by(user_id=idnum)                
-		return render_template('dash.html',displays=displays, times=times, chatinz=chatinz)
+            if current_user.Admin== 'Admin':
+                    chatinz=Messages.query.all()
+                    return render_template('admindash.html',displays=displays, times=times, chatinz=chatinz,rossstatus=rossstatus,hallstatus=hallstatus)
+            else:
+                    idnum=current_user.id
+                    chatinz=Messages.query.filter_by(user_id=idnum)                
+                    return render_template('dash.html',displays=displays, times=times, chatinz=chatinz,rossstatus=rossstatus,hallstatus=hallstatus)
         
             
 @app.route("/dashboard/submit",methods=['POST'])
 def submit():
-                screen=request.form['displays']
-                time=request.form['times']
-                idnum=current_user.id
-                message=Messages(message=request.form['message'],user_id=idnum,duration=time,lt=screen)
-                disp=Displays.query.filter_by(location=screen).first()
-                if disp.status=='Avail':
-                    db.session.add(message)
-                    db.session.commit()
-                    screen=request.form['displays']
-                    
-                    print(str(request.form['displays']))
-                    
-                    disp.status='Busy'
-                    disp.message_id=message.id
-                    db.session.commit()
-                    
-                    if(screen==displays[0]):
-                        megasend(request.form['message'],time)
-                        
-                        
-                    else:
-                        piesend(request.form['message'])
-                        print("Connecting to broker")
-                        client.connect(broker_address)
-                        client.loop_start()
-                        client.subscribe("RossResp")
-                        client.on_message=on_message
-                        time.sleep(4)
-                        client.loop_stop()
-                        timer=threading.Timer(time,checkque2)
-                    if resp=='OK':
-                        print 'Message recieved'
-                                                              
-                    return redirect(url_for('dashboard'))
-                else:
-                    q1.put(message)
-                    return redirect(url_for('dashboard'))
+    if any(c in request.form['message'] for c in profane):
+        print("Profane")
+        idnum=current_user.id
+        user=User.query.filter_by(id=idnum).first()
+        user.active=0
+        db.session.commit()
+        logout_user()
+        return render_template('lockout.html')
+    else:
+        screen=request.form['displays']
+        time=request.form['times']
+        idnum=current_user.id
+        message=Messages(message=request.form['message'],user_id=idnum,duration=time,lt=screen)
+        disp=Displays.query.filter_by(location=screen).first()
+        if disp.status=='Avail':
+            db.session.add(message)
+            db.session.commit()
+            screen=request.form['displays']
+            
+            print(str(request.form['displays']))
+            
+            disp.status='Busy'
+            disp.message_id=message.id
+            db.session.commit()
+            
+            if(screen==displays[0]):
+                megasend(request.form['message'],time)
+                
+                
+            else:
+                piesend(request.form['message'])
+                print("Connecting to broker")
+                client.connect(broker_address)
+                client.loop_start()
+                client.subscribe("RossResp")
+                client.on_message=on_message
+                time.sleep(4)
+                client.loop_stop()
+                timer=threading.Timer(time,checkque2)    
+            if resp=='OK':
+                print 'Message recieved'
+                                                      
+            return redirect(url_for('dashboard'))
+        else:
+            q1.put(message)
+            return redirect(url_for('dashboard'))
 
 def checkque():
     if q1.empty():
@@ -228,6 +243,8 @@ def checkque():
         print('FULL')
         mess=q1.get()
         megasend(mess.message,mess.duration)
+        db.session.add(mess)
+        db.session.commit()
     
 	    
 @app.route("/add/<uid>")
@@ -241,6 +258,12 @@ def add(uid):
 def reg():
     return render_template('reg.html')
 
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('userlog'))
+
 @app.route("/reg/ask",methods=['POST'])
 def ask():
     uname=request.form['username']
@@ -250,6 +273,9 @@ def ask():
     db.session.commit()
     return redirect(url_for('userlog'))
 
+@app.route("/dashboard/disp",methods=['GET','POST'])
+def disp():
+    return redirect(url_for('userlog'))
 
 if __name__ == '__main__':
     app.run(host=myip, port=5000, debug=True)

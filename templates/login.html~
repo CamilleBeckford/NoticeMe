@@ -35,7 +35,7 @@
           <option value="User">User</option>
           
        </select> </br> -->
-       
+       <div class="{{type}}" role="alert">{{errorm}}</br></div>
       <label><b>Username</b></label>
       <input type="text" placeholder="Alan Turning" name="username" required>
   
@@ -49,6 +49,7 @@
     </div>
   
   </form>
+  <a class="btn" href="/reg">Register</a>
 </div>
 
 <div id="Contact" class="tabcontent">

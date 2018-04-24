@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 	<!--<meta http-equiv="Content-Type" content="text/html; charset = utf-8" />-->
 	<title>Notice Me</title>
-	<link rel="stylesheet" type="text/css" href='/static/login.css'>/>
+	<link rel="stylesheet" type="text/css" href='/static/login.css'>
 	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
 	<script src="script.js" type="text/javascript"> </script>
 </head>
@@ -17,7 +17,7 @@
   <button class="tablink"><strong>Notice Me</strong></button>
   <button class="tablink" onclick="openPage('Home', this, '#135171')" id="defaultOpen">Home</button>
   <button class="tablink" onclick="openPage('Contact', this, '#3699ff')">Contact</button>
-  <button class="tablink" onclick="openPage('About', this, '#258825')">About</button>
+  <a href="{{url_for('logout')}}"><button class="tablink" onclick="logout()">Logout</button></a>
 </div>
 
 <div id="Home" class="tabcontent">
@@ -29,7 +29,7 @@
     <div class="container">
          <h2>Enter Your Message Here</h2>
 
-      <textarea name="message" cols="60" rows="10"></textarea><br/><br/>
+      <textarea name="message" cols="60" rows="10" maxlength="130"></textarea><br/><br/>
 			<select name="displays" method="GET" action="/">
 			  <option value="{{displays[0]}}" selected>{{displays[0]}}</option>
 			  {% for display in displays[1:] %}
@@ -37,7 +37,7 @@
 			  {% endfor %}
 			</select>
 			
-			<select name="times" method="GET" action="/">
+			<select name="times" method="GET" action="/dashboard/disp">
 			  <option value="{{times[0]}}" selected>{{times[0]}}</option>
 			  {% for time in times[1:] %}
 			    <option value="{{time}}">{{time}}</option>
@@ -106,5 +106,9 @@
         </tbody>
     </table>
 </div>
+
+<script>
+
+</script>
 </body>
 </html>
