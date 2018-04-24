@@ -33,7 +33,7 @@ login_manager.init_app(app)
 login_manager.login_view='login'
 displays=['HallLT','RossLT']
 times=['0.5','1','5','15','30','45','60']
-myip="192.168.1.8"
+myip="192.168.1.104"
 broker_address=myip
 resp=''
 client=mqtt.Client("Server")
@@ -124,7 +124,7 @@ def piesend(message):
 def megasend(message,time):
     time=str((int(time)*60)+1)
     sock=socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server_address=('192.168.0.102',80)
+    server_address=('192.168.1.106',80)
     print("Connect to server")
     sock.connect(server_address)
     try:
@@ -137,6 +137,10 @@ def megasend(message,time):
         amount_recieved=0
                   
         amount_expected= len(mess)
+        time=int(time)+4
+        timer=threading.Timer(time,checkque)
+        timer.start()
+        
     finally:
         sock.close()
         
@@ -195,6 +199,7 @@ def submit():
                     if(screen==displays[0]):
                         megasend(request.form['message'],time)
                         
+                        
                     else:
                         piesend(request.form['message'])
                         print("Connecting to broker")
@@ -204,15 +209,25 @@ def submit():
                         client.on_message=on_message
                         time.sleep(4)
                         client.loop_stop()
+                        timer=threading.Timer(time,checkque2)
                     if resp=='OK':
                         print 'Message recieved'
-                                          
+                                                              
                     return redirect(url_for('dashboard'))
                 else:
                     q1.put(message)
                     return redirect(url_for('dashboard'))
 
-def messque():
+def checkque():
+    if q1.empty():
+        disp=Displays.query.filter_by(location='HallLT').first()
+        disp.status='Avail'
+        db.session.commit()
+        print('EMPTY')
+    else:
+        print('FULL')
+        mess=q1.get()
+        megasend(mess.message,mess.duration)
     
 	    
 @app.route("/add/<uid>")
@@ -239,4 +254,3 @@ def ask():
 if __name__ == '__main__':
     app.run(host=myip, port=5000, debug=True)
     app.debug(True)
-    
